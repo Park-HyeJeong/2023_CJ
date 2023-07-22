@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.cj.databinding.ActivityConveyorMainBinding
-import com.example.cj.databinding.ActivityStopboxMainBinding
 
 class ConveyorMain : AppCompatActivity() {
     private var mBinding: ActivityConveyorMainBinding? = null
@@ -18,7 +17,7 @@ class ConveyorMain : AppCompatActivity() {
         mBinding = ActivityConveyorMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val intent = Intent(this,MainActivity::class.java)
+        val intent = Intent(this,StopboxMain::class.java)
         binding.backbtn.setOnClickListener {startActivity(intent)}
     }
 }
