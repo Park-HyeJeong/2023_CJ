@@ -1,6 +1,7 @@
 package com.example.cj
 
 import android.Manifest
+import android.app.UiAutomation
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -16,8 +17,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.cj.databinding.ActivityStopboxMainBinding
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -31,6 +34,9 @@ class StopboxMain : AppCompatActivity() {
 
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
+
+    var fbStorage : FirebaseStorage? = null
+    var uploadUri : Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +53,17 @@ class StopboxMain : AppCompatActivity() {
 
         binding.cameraCaptureButton.setOnClickListener {
             takePhoto()
+            //uploadImgFirebase(uploadUri)
         }
 
         outputDirectory = getOutputDirectory()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
+
+//    private fun uploadImgFirebase(uploadUri: Uri?){
+//
+//    }
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
@@ -78,11 +89,30 @@ class StopboxMain : AppCompatActivity() {
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = Uri.fromFile(photoFile)
+                    uploadUri = Uri.fromFile(photoFile)
+                    Log.d("test-log", uploadUri.toString())
                     val msg = "Photo capture succeeded: $savedUri"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d("CameraX-Debug", msg)
                 }
+
             })
+
+        // firebase-storage instance
+        var storage: FirebaseStorage? = FirebaseStorage.getInstance()
+
+        // file name - 추후에 이미지 크기도 첨가
+        var timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        var fileName = "IMAGE_" + timestamp + "_.png"
+
+        // default destination = images/${filename}
+        var imagesRef = storage!!.reference.child("images/").child(fileName)
+        uploadUri?.let { uri ->
+            imagesRef.putFile(uri).addOnSuccessListener {
+                //Toast.makeText(activity, getString(R.string.upload_success), Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
     // viewFinder 설정 : Preview
@@ -178,4 +208,6 @@ class StopboxMain : AppCompatActivity() {
         return if (mediaDir != null && mediaDir.exists()) mediaDir
         else filesDir
     }
+
+
 }
