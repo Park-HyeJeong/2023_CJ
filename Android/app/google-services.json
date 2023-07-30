@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "811375783518",
-    "project_id": "cj2023-dca73",
-    "storage_bucket": "cj2023-dca73.appspot.com"
+    "project_number": "542108247872",
+    "project_id": "cj-2023-pororo",
+    "storage_bucket": "cj-2023-pororo.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:811375783518:android:b4be837e78708f2b14cecf",
+        "mobilesdk_app_id": "1:542108247872:android:60ab0c39ce71905391fca5",
         "android_client_info": {
           "package_name": "com.example.cj"
         }
       },
       "oauth_client": [
         {
-          "client_id": "811375783518-4c1nehcn612h1oeslgbifsqksnf6an02.apps.googleusercontent.com",
+          "client_id": "542108247872-7cte4rakc0391a85pnmdbd22l88smojk.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBdSr3Km80pUpK7Rb55t0WxOtJCgeFOAcc"
+          "current_key": "AIzaSyBftsz6Qfq9ghbyv5OVqnlZaTW9HK_XBZY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "811375783518-4c1nehcn612h1oeslgbifsqksnf6an02.apps.googleusercontent.com",
+              "client_id": "542108247872-7cte4rakc0391a85pnmdbd22l88smojk.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
