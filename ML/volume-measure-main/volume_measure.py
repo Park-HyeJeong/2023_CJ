@@ -1,7 +1,11 @@
+import time
+
 import numpy as np
 import glob, cv2
 import utils
 import timeit
+import firebase_admin
+from firebase_admin import credentials, storage
 from rembg import remove
 
 class volumetric:
@@ -114,7 +118,7 @@ class volumetric:
    
         if len(self.object_vertexes) == 0:
             print("object vertexes are not detected....")
-            quit() 
+            quit()
 
     def fix_vertex(self):
         '''
@@ -306,7 +310,7 @@ class volumetric:
             
             cv2.line(self.img,(self.object_vertexes[1]), (self.object_vertexes[2]), (0, 255, 0), (10//self.resize), cv2.LINE_AA)
             cv2.line(self.img,(self.object_vertexes[2]), (self.object_vertexes[3]), (255, 0, 0), (10//self.resize), cv2.LINE_AA)
-        
+
         elif self.object_type == "cylinder":
             cylinder_real_volume = self.image_address.split("_")[1]
             real_width = float(cylinder_real_volume.split("x")[0])
@@ -386,25 +390,65 @@ if __name__ == '__main__':
 
         a.draw_image()
 
-        #a.show_image(a.origin_image, "Origin Image")
-        #cv2.waitKey()
+        a.show_image(a.origin_image, "Origin Image")
+        cv2.waitKey()
 
-        # a.show_image(a.remove_bg_image, "Remove Background")
-        # cv2.waitKey(1500)
+        a.show_image(a.remove_bg_image, "Remove Background")
+        cv2.waitKey(1500)
         #
-        # a.show_image(a.object_detection_image, "Object Detection Image")
-        # cv2.waitKey(1500)
+        a.show_image(a.object_detection_image, "Object Detection Image")
+        cv2.waitKey(1500)
         #
-        # a.show_image(a.vertexes_image, "vertexes Image")
-        # cv2.waitKey(1500)
+        a.show_image(a.vertexes_image, "vertexes Image")
+        cv2.waitKey(1500)
 
         a.show_image(a.img, "Result Image")
         cv2.waitKey()
 
         cv2.destroyAllWindows()
 
-        # a.save_image(image_address="G:/download/image.jpg", image=a.img)
+        a.save_image(image_address="./upload_img/image.jpg", image=a.img)
         # a.time_check()
-    image_path = "./hexahedron/h_21x21x29 (1).jpg"
+
+    # 자동으로 받아올 수 있는 환경을 구성해보자!!!
+    # Firebase Admin SDK 초기화 (한 번만 호출해야 합니다!)
+    try:
+        # 이미 기존에 초기화된 Firebase 앱이 있는지 확인
+        app = firebase_admin.get_app()
+    except ValueError as e:
+        # 기존에 초기화된 Firebase 앱이 없는 경우에만 초기화
+        cred = credentials.Certificate("serviceKey.json")
+        # 서비스 계정 - python 비공개 서버키 다운(json)
+        # json 파일의 경우 임의로 이름을 바꿨습니다.
+        app = firebase_admin.initialize_app(cred, {"storageBucket": "cj-2023-pororo.appspot.com"})
+        # storage 주소에서 gs://뺴고 붙여넣기
+
+
+    def upload_image(local_file_path, destination_file_path):
+        # 이미지 업로드
+        bucket = storage.bucket(app=app)
+        blob = bucket.blob(destination_file_path)
+        blob.upload_from_filename(local_file_path)
+
+
+    def download_image(destination_file_path, local_file_path):
+        # 이미지 다운로드
+        bucket = storage.bucket(app=app)
+        blob = bucket.blob(destination_file_path)
+        blob.download_to_filename(local_file_path)
+
+
+
+
+    # 이미지 다운로드 예시
+    download_image("input/h_4.5 x 4.5 x 18 (2).jpg", "./hexahedron/image.jpg")  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+
+    image_path = "./hexahedron/image.jpg"
     npz_path = "./calibration/cs_(8, 5)_rd_3_te_0.24_rs_1.npz"
+    time.sleep(5)
     main(image_path,npz_path)
+
+    # 이미지 업로드 예시
+    local_image_path = "./upload_img/image.jpg"  # 자기 컴퓨터 내 이미지 경로
+    destination_image_path = "result/image.jpg"  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
+    upload_image(local_image_path, destination_image_path)
