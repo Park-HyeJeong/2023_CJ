@@ -27,7 +27,7 @@ def find_checker_outer_points(refined_corners: np.array, checker_sizes: tuple, p
 
     return outer_points
 
-calibration_path = "./30'_30+40cm/calibration"
+calibration_path = "./calibration"
 
 if __name__ == "__main__":
     images = glob.glob(calibration_path + "/*.jpg")

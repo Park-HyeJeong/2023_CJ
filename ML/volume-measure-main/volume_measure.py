@@ -392,7 +392,7 @@ class volumetric:
 
 if __name__ == '__main__':
     # 7. 전체
-    def main(fname, npz):
+    def main(fname, npz, img_name):
         a = volumetric(fname, npz)
         a.set_init()
         a.set_npz_values()
@@ -432,8 +432,13 @@ if __name__ == '__main__':
 
         cv2.destroyAllWindows()
 
-        a.save_image(image_address="./upload_img/image1.jpg", image=a.img)
+        a.save_image(image_address="./upload_img/" + img_name, image=a.img)
         # a.time_check()
+
+        # 이미지 업로드 예시
+        local_image_path = "./upload_img/" + img_name  # 자기 컴퓨터 내 이미지 경로
+        destination_image_path = "result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
+        upload_image(local_image_path, destination_image_path)
 
 
     # 자동으로 받아올 수 있는 환경을 구성해보자!!!
@@ -487,17 +492,29 @@ if __name__ == '__main__':
 
         # 2번째 항목 추출
         second_item = items[1]
-        print(second_item)
+        print(second_item)  # input/202308011335.jpg
+        # 파일 이름만 뽑아내자
+        tmp = second_item.split("/")
+        img_name = tmp[1]
+        print(img_name)  # 202308011353.jpeg
         # destination_file_path =
         # print(type(latest_image_blob))
         # 2) latest_image_blob:
         # <Blob: cj-2023-pororo.appspot.com, input/202307311606.jpg, 1690787255953491>
         # 이미지 다운로드 예시
-        download_image(second_item, "./hexahedron/image1.jpg")  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
-        download_image(second_item, "./download_img/image1.jpg")  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        time.sleep(3)
+        image_path = "./hexahedron/" + img_name
+        npz_path = "calibration/cs_(7, 7)_rd_3_te_0.05_rs_6.npz"
+        main(image_path, npz_path, img_name)
 
 
+    # # 예시 코드
+    # calibration_path = "./calibration"
 
+    # if __name__ == "__main__":
+    #     images = glob.glob(calibration_path + "/*.jpg")
 
     # # 최신 이미지 다운로드
     # def download_latest_image():
@@ -512,16 +529,13 @@ if __name__ == '__main__':
     #     else:
     #         print("이미지 다운로드 실패:", response.status_code)
     get_latest_image_url()
-    time.sleep(3)
-    image_path = "./hexahedron/image1.jpg"
-    npz_path = "./calibration/cs_(8, 5)_rd_3_te_0.24_rs_1.npz"
-    main(image_path, npz_path)
+    # 여기서 메인함수도 넣어버려
 
     # 이미지 다운로드
     # 실행
     # download_latest_image()
 
     # 이미지 업로드 예시
-    local_image_path = "./upload_img/image1.jpg"  # 자기 컴퓨터 내 이미지 경로
-    destination_image_path = "result/image1.jpg"  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
+    local_image_path = "./upload_img/image2.jpg"  # 자기 컴퓨터 내 이미지 경로
+    destination_image_path = "result/image2.jpg"  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
     upload_image(local_image_path, destination_image_path)
