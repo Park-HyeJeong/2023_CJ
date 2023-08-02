@@ -2,7 +2,9 @@ package com.example.cj
 
 import android.Manifest
 import android.app.UiAutomation
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -35,7 +37,6 @@ class StopboxMain : AppCompatActivity() {
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
 
-    var fbStorage : FirebaseStorage? = null
     var uploadUri : Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,9 +52,20 @@ class StopboxMain : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
+        val intent = Intent(this,CheckActivity::class.java)
+
         binding.cameraCaptureButton.setOnClickListener {
-            takePhoto()
-            //uploadImgFirebase(uploadUri)
+            //비동기 처리 : takePhoto 함수와 intent.putExtra가 실행되는 타이밍 오차로 null로 값이 전달되는 오류 수정
+            takePhoto { uploadUri ->
+                // Handle the uploadUri here
+                if (uploadUri != null) {
+                    val intent = Intent(this, CheckActivity::class.java)
+                    intent.putExtra("img_Uri", uploadUri)
+                    startActivity(intent)
+                } else {
+                    // Handle the case when uploadUri is null (error occurred during image capture)
+                }
+            }
         }
 
         outputDirectory = getOutputDirectory()
@@ -61,11 +73,7 @@ class StopboxMain : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-//    private fun uploadImgFirebase(uploadUri: Uri?){
-//
-//    }
-
-    private fun takePhoto() {
+    private fun takePhoto(completion: (Uri?) -> Unit) {
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
@@ -87,32 +95,32 @@ class StopboxMain : AppCompatActivity() {
                     Log.d("CameraX-Debug", "Photo capture failed: ${exc.message}", exc)
                 }
 
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val savedUri = Uri.fromFile(photoFile)
                     uploadUri = Uri.fromFile(photoFile)
-                    Log.d("test-log", uploadUri.toString())
                     val msg = "Photo capture succeeded: $savedUri"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d("CameraX-Debug", msg)
+
+                    completion(uploadUri)
                 }
 
             })
 
-        // firebase-storage instance
-        var storage: FirebaseStorage? = FirebaseStorage.getInstance()
-
-        // file name - 추후에 이미지 크기도 첨가
-        var timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        var fileName = "IMAGE_" + timestamp + "_.png"
-
-        // default destination = images/${filename}
-        var imagesRef = storage!!.reference.child("images/").child(fileName)
-        uploadUri?.let { uri ->
-            imagesRef.putFile(uri).addOnSuccessListener {
-                //Toast.makeText(activity, getString(R.string.upload_success), Toast.LENGTH_SHORT).show()
-            }
-        }
-
+    // firebase-storage instance
+//        var storage: FirebaseStorage? = FirebaseStorage.getInstance()
+//
+//        // file name - 추후에 이미지 크기도 첨가
+//        var timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+//        var fileName = "IMAGE_" + timestamp + "_.jpg"
+//
+//        // default destination = images/${filename}
+//        var imagesRef = storage!!.reference.child("images/").child(fileName)
+//        uploadUri?.let { uri ->
+//            imagesRef.putFile(uri).addOnSuccessListener {
+//                //Toast.makeText(activity, getString(R.string.upload_success), Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 
     // viewFinder 설정 : Preview
