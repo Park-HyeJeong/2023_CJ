@@ -22,7 +22,7 @@ class volumetric:
         self.w = self.origin_image.shape[1]
 
     def set_init(self):
-        npz = self.npz_file.split("/")[-1]  # "./30'_19cm + 40cm/Calibration/cs_(8, 5)_rd_3_te_0.06_rs_4.npz
+        npz = self.npz_file.split("/")[-1]
         npz = npz.split("_")  # cs_(8, 5)_rd_3_te_0.06_rs_4.npz
         self.checker_sizes = (int(npz[1][1]), int(npz[1][4]))  # 8, 5
         self.check_real_dist = int(npz[3])
@@ -34,10 +34,8 @@ class volumetric:
 
         if "hexahedron" in self.image_address:
             self.object_type = "hexahedron"
-        elif "cylinder" in self.image_address:
-            self.object_type = "cylinder"
         else:
-            self.object_type = "circle"
+            self.object_type = "Error"
 
     def set_image(self, image_address: str):
         self.img = cv2.imread(image_address)
@@ -95,19 +93,10 @@ class volumetric:
                     self.object_vertexes = np.reshape(vertex_list, (-1, 2))
                     check = 1
                     break
-                elif self.object_type == "cylinder" and 10 < len(vertex) < 50 and length > (
-                        1000 // (self.resize)) and cv2.contourArea(vertex) > (5000 // self.resize):
-                    vertex_list.append(vertex)
-                    self.object_vertexes = np.array(vertex_list).reshape(-1, 2)
-                    self.cylinder_mask_img = np.zeros(self.img.shape).astype(self.img.dtype)
-                    cv2.drawContours(self.cylinder_mask_img, [vertex], 0, (0, 0, 255), 2, cv2.LINE_AA)
-                    check = 1
-                    break
-                #########  수정 필요 #############
-                elif self.object_type == "circle" and len(vertex) == 8 and length > (1000 // (self.resize ** 2)):
+                # hexahedron으로 탐지 하지 못하고 출력을 다르게 하는 경우
+                elif self.object_type == "Error" and len(vertex) == 8 and length > (1000 // (self.resize ** 2)):
                     self.vertexes = np.reshape(vertex_list, (-1, 8, 2))
-                    check = 1
-                    break
+                    quit()
             if check == 1:
                 break
 
@@ -140,62 +129,6 @@ class volumetric:
                 temp = contours.pop(0)
                 contours.append(temp)
             self.object_vertexes = np.array(contours)
-
-        elif self.object_type == "cylinder":
-            # 특징점 알고리즘 객체 생성 (ORB)
-            feature = cv2.ORB_create(scaleFactor=1.2, edgeThreshold=100, )
-
-            kp1 = feature.detect(self.cylinder_mask_img)
-            _, desc1 = feature.compute(self.cylinder_mask_img, kp1)
-
-            corners = [list(map(int, kp1[i].pt)) for i in range(len(kp1))]
-
-            center, r, d = cv2.fitEllipse(self.object_vertexes)
-            center = np.array(center)
-
-            quadrant1 = list()
-            quadrant2 = list()
-            quadrant3 = list()
-            quadrant4 = list()
-
-            # 중심점보다 작은지로 4사분면으로 코너 점들을 나눈다
-            for idx, cor in enumerate(corners):
-
-                sort_quadrant = (cor < center).tolist()
-
-                if sort_quadrant == [False, True]:  # 1사분면
-                    quadrant1.append(corners[idx])
-                elif sort_quadrant == [True, True]:  # 2사분면
-                    quadrant2.append(corners[idx])
-                elif sort_quadrant == [True, False]:  # 3사분면
-                    quadrant3.append(corners[idx])
-                elif sort_quadrant == [False, False]:  # 4사분면
-                    quadrant4.append(corners[idx])
-
-            # 사분면의 값들을 리스트로 만들어준다 -> [2, 3, 4, 1] 사분면 순서로 정리해준다
-            # 나중에 체적 정보를 측정할때 순서를 위한 것
-            quadrant_list = [quadrant2, quadrant3, quadrant4, quadrant1]
-
-            # 각 분면마다 center와 가장 멀리 떨어져 있는값을 그려준다 (맨하탄 거리 - 파란색)
-            center = center.tolist()
-
-            self.object_vertexes = []
-            for qua in quadrant_list:
-                longest_dist = [0, 0]
-                for idx, q in enumerate(qua):
-                    # dist = utils.euclidean_distance(center, q) # 유클리드
-
-                    # 맨하탄 거리 : x 축과 y축에 가중치를 준다.
-                    x, y = abs(np.array(center) - np.array(q))
-                    dist = (x * 1.5) + (y * 0.8)
-
-                    if longest_dist[0] < dist:
-                        longest_dist = [dist, idx]
-
-                # 중심점에서 각 사분면 마다 맨하탄 거리가 가장 먼 좌표 넣는다
-                self.object_vertexes.append(qua[longest_dist[1]])
-
-            self.object_vertexes = np.array(self.object_vertexes)
 
     def trans_checker_stand_coor(self):  # point: list, stand_corr: tuple, checker_size: tuple) -> list:
         """
@@ -253,13 +186,8 @@ class volumetric:
             self.vertical = (
                     utils.euclidean_distance(re_object_points[2], re_object_points[3]) * self.pix_per_real_dist
             )
-        elif self.object_type == "cylinder":
-            self.width = (
-                    utils.euclidean_distance(re_object_points[1], re_object_points[2]) * self.pix_per_real_dist
-            )
-        else:
-            print("구 입니다")
 
+    # 높이 측정이 제대로 안돼...
     def measure_height(self, draw=True):
         """
         높이 측정 함수
@@ -299,7 +227,7 @@ class volumetric:
 
     def draw_image(self, printer=False):
         font = cv2.FONT_HERSHEY_SIMPLEX
-
+        # fontv = cv2.FONT_HERYSHEY_DUPLEX
         # 가로, 세로, 높이 출력
         if self.object_type == "hexahedron":
             if printer:
@@ -307,9 +235,11 @@ class volumetric:
                 print("가로길이 :", self.width)
                 print("세로길이 :", self.vertical)
                 print("높이길이 :", self.height * self.check_real_dist)
+                # 부피를 이미지 상에 띄워주자
                 print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist): .2f}")
+                # print("부피 :", self.width * self.vertical * self.height * self.check_real_dist)
 
-            # 가로세로 그리기
+            # 가로세로높이 그리기
             cv2.putText(self.img, f"{self.width: .2f}cm", (
                 self.object_vertexes[1][0] - (self.object_vertexes[1][0] // 3),
                 self.object_vertexes[1][1] + ((self.h - self.object_vertexes[1][1]) // 3)), font, (3 / self.resize),
@@ -321,42 +251,16 @@ class volumetric:
                 self.object_vertexes[0][0] - (self.object_vertexes[0][0] // 2),
                 (self.object_vertexes[0][1] + self.object_vertexes[1][1]) // 2), font, (3 / self.resize), (0, 0, 255),
                         (10 // self.resize))
-
             cv2.line(self.img, (self.object_vertexes[1]), (self.object_vertexes[2]), (0, 255, 0), (10 // self.resize),
                      cv2.LINE_AA)
             cv2.line(self.img, (self.object_vertexes[2]), (self.object_vertexes[3]), (255, 0, 0), (10 // self.resize),
                      cv2.LINE_AA)
-
-        elif self.object_type == "cylinder":
-            cylinder_real_volume = self.image_address.split("_")[1]
-            real_width = float(cylinder_real_volume.split("x")[0])
-            real_height = float(cylinder_real_volume.split("x")[1])
-
-            if printer:
-                print("원기둥")
-                print("--- 측정 ----")
-                print(f"지름 : {self.width: .2f}")
-                print(f"높이 : {(self.height * self.check_real_dist): .2f}")
-                print("--- 실제 ----")
-                print(f"지름 : {real_width: .2f}")
-                print(f"높이 : {real_height: .2f}")
-                print("--- 오차 ----")
-                print(f"지름 : {abs(self.width - real_width): .2f}")
-                print(f"높이 : {abs((self.height * self.check_real_dist) - real_height): .2f}")
-                print(
-                    f"산술오차율: {((abs(self.width - real_width) / real_width) + (abs((self.height * self.check_real_dist) - real_height) / real_height)) / 2 * 100:.2f}%")
-                print(
-                    f"조화오차율: {1 / ((real_width / abs(self.width - real_width)) + (real_height / abs((self.height * self.check_real_dist) - real_height)) / 2) * 100:.2f}%")
-
-            cv2.putText(self.img, f"{self.width: .2f}cm",
-                        ((self.object_vertexes[1][0]), self.object_vertexes[1][1] + 50), font, (3 / self.resize),
-                        (0, 255, 0), (10 // self.resize))
-            cv2.putText(self.img, f"{(self.height * self.check_real_dist): .2f}cm", (
-                self.object_vertexes[0][0] - (self.object_vertexes[0][0] // 3) - 30,
-                (self.object_vertexes[0][1] + self.object_vertexes[1][1]) // 2), font, (3 / self.resize), (0, 0, 255),
-                        (10 // self.resize))
-            cv2.line(self.img, (self.object_vertexes[1]), (self.object_vertexes[2]), (0, 255, 0), (10 // self.resize),
-                     cv2.LINE_AA)
+            # 부피 나타내는 박스 그려봅시다
+            # cv2.rectangle(img, pt1, pt2,(0,0,255),3)
+            cv2.rectangle(self.img, (550, 10), (750, 80), (0, 255, 0), 3)
+            cv2.putText(self.img, "{:.2f}".format(self.width * self.vertical * self.height * self.check_real_dist),
+                        (560, 55),
+                        font, 1.4, (0, 0, 255), 2)
 
     def show_image(self, image: np.array, image_name: str):
         window_size_x, window_size_y = 600, 800
@@ -372,8 +276,8 @@ class volumetric:
 
         # cv2.destroyAllWindows()
 
+    # save_image를 통해 일단 로컬에 저장할 예정
     def save_image(self, image_address: str, image: np.array):
-        # image_address = "G:/download/image.jpg"
         cv2.imwrite(image_address, image)
 
     def time_check(self, time_check_number=10):
@@ -383,11 +287,12 @@ class volumetric:
         t3 = timeit.timeit(stmt=self.measure_width_vertical, number=time_check_number, setup="pass")
         t4 = timeit.timeit(stmt=self.measure_height, number=time_check_number, setup="pass")
 
-        print(f"1.remove_background : {t1 / time_check_number} ")
-        print(f"2.find_vertex : {(t2_1 + t2_2) / time_check_number}")
-        print(f"3.measure_width_vertical : {t3 / time_check_number}")
-        print(f"4.measure_height : {t4 / time_check_number}")
-        print(f"total time : {(t1 + t2_1 + t2_2 + t3 + t4) / time_check_number}")
+        # test상에서 time_check함, 불필요한 출력은 줄임
+        # print(f"1.remove_background : {t1 / time_check_number} ")
+        # print(f"2.find_vertex : {(t2_1 + t2_2) / time_check_number}")
+        # print(f"3.measure_width_vertical : {t3 / time_check_number}")
+        # print(f"4.measure_height : {t4 / time_check_number}")
+        # print(f"total time : {(t1 + t2_1 + t2_2 + t3 + t4) / time_check_number}")
 
 
 if __name__ == '__main__':
@@ -420,10 +325,10 @@ if __name__ == '__main__':
 
         # a.show_image(a.remove_bg_image, "Remove Background")
         # cv2.waitKey(1500)
-        # #
+
         # a.show_image(a.object_detection_image, "Object Detection Image")
         # cv2.waitKey(1500)
-        # #
+
         # a.show_image(a.vertexes_image, "vertexes Image")
         # cv2.waitKey(1500)
 
@@ -435,10 +340,43 @@ if __name__ == '__main__':
         a.save_image(image_address="./upload_img/" + img_name, image=a.img)
         # a.time_check()
 
+        # # 완성된 이미지 위에 부피를 띄울까?
+        # ###
+        # path = r'C:\Users\Rajnish\Desktop\geeksforgeeks\geeks.png'
+
+        # # Reading an image in default mode
+        # image = cv2.imread(path)
+
+        # # Window name in which image is displayed
+        # window_name = 'Image'
+
+        # # font
+        # font = cv2.FONT_HERSHEY_SIMPLEX
+
+        # # org
+        # org = (50, 50)
+
+        # # fontScale
+        # fontScale = 1
+
+        # # Blue color in BGR
+        # color = (255, 0, 0)
+
+        # # Line thickness of 2 px
+        # thickness = 2
+
+        # # Using cv2.putText() method
+        # image = cv2.putText(image, 'OpenCV', org, font,
+        #                 fontScale, color, thickness, cv2.LINE_AA)
+        # # Displaying the image
+        # cv2.imshow(window_name, image)
+        # ###
+
         # 이미지 업로드 예시
         local_image_path = "./upload_img/" + img_name  # 자기 컴퓨터 내 이미지 경로
         destination_image_path = "result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
         upload_image(local_image_path, destination_image_path)
+        print("upload complete!!!")
 
 
     # 자동으로 받아올 수 있는 환경을 구성해보자!!!
@@ -473,7 +411,7 @@ if __name__ == '__main__':
     # 최신 이미지 URL 가져오기
     def get_latest_image_url():
         bucket = storage.bucket()
-        blobs = bucket.list_blobs(prefix="input/")  # 이미지가 저장된 디렉토리명 설정
+        blobs = bucket.list_blobs(prefix="images/")  # 이미지가 저장된 디렉토리명 설정
         # print("1) blobs: ")
         # print(blobs) # blob 아님
         # 1) blobs:
@@ -481,15 +419,14 @@ if __name__ == '__main__':
         sorted_blobs = sorted(blobs, key=lambda blob: blob.time_created, reverse=True)
         latest_image_blob = sorted_blobs[0]
         print("test: ")
-        print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
+        # print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
         # print(sorted_blobs[1]) # 얘도 아닌듯
         # test:
         # <Blob: cj-2023-pororo.appspot.com, input/, 1690706608571788>
         # print("2) latest_image_blob: ") # 여기서 파일명도 가져오거든
-        print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
+        # print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
         blob_string = str(latest_image_blob)
         items = blob_string.strip("<>").split(", ")
-
         # 2번째 항목 추출
         second_item = items[1]
         print(second_item)  # input/202308011335.jpg
@@ -501,41 +438,17 @@ if __name__ == '__main__':
         # print(type(latest_image_blob))
         # 2) latest_image_blob:
         # <Blob: cj-2023-pororo.appspot.com, input/202307311606.jpg, 1690787255953491>
-        # 이미지 다운로드 예시
+
+        # 이미지 다운로드
         download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         time.sleep(3)
         image_path = "./hexahedron/" + img_name
-        npz_path = "calibration/cs_(7, 7)_rd_3_te_0.05_rs_6.npz"
+        npz_name = "cs_(8, 5)_rd_3_te_0.06_rs_4.npz"
+        npz_path = "calibration/" + npz_name
         main(image_path, npz_path, img_name)
+        # 이미지 업로드
 
 
-    # # 예시 코드
-    # calibration_path = "./calibration"
-
-    # if __name__ == "__main__":
-    #     images = glob.glob(calibration_path + "/*.jpg")
-
-    # # 최신 이미지 다운로드
-    # def download_latest_image():
-    #     latest_image_url = get_latest_image_url()
-    #     response = requests.get(latest_image_url)
-    #     print("3) latest_image_url: ")
-    #     print(latest_image_url)
-    #     if response.status_code == 200:
-    #         with open("latest_image.jpg", "wb") as f:
-    #             f.write(response.content)
-    #         print("이미지 다운로드 완료!")
-    #     else:
-    #         print("이미지 다운로드 실패:", response.status_code)
+    # 함수 실행
     get_latest_image_url()
-    # 여기서 메인함수도 넣어버려
-
-    # 이미지 다운로드
-    # 실행
-    # download_latest_image()
-
-    # 이미지 업로드 예시
-    local_image_path = "./upload_img/image2.jpg"  # 자기 컴퓨터 내 이미지 경로
-    destination_image_path = "result/image2.jpg"  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
-    upload_image(local_image_path, destination_image_path)
