@@ -15,24 +15,25 @@ class volumetric:
     def __init__(self, image_address: str, npz_file: str):
 
         self.image_address = image_address
-        self.origin_image = cv2.imread(image_address)
+        self.origin_image = cv2.imread(image_address) # 튜플 형식으로 받아옴
         self.npz_file = npz_file
 
-        self.h = self.origin_image.shape[0]
-        self.w = self.origin_image.shape[1]
+        self.h = self.origin_image.shape[0] # 높이 받아오기
+        self.w = self.origin_image.shape[1] # 너비 받아오기
 
     def set_init(self):
         npz = self.npz_file.split("/")[-1]
-        npz = npz.split("_")  # cs_(8, 5)_rd_3_te_0.06_rs_4.npz
+        npz = npz.split("_")  # cs_(8, 5)_rd_3_te_0.06_rs_4.npz 파일 형식 자르기
         self.checker_sizes = (int(npz[1][1]), int(npz[1][4]))  # 8, 5
         self.check_real_dist = int(npz[3])
-        self.resize = int(npz[-1].split(".")[0])
+        self.resize = int(npz[-1].split(".")[0]) # 4
+        # self.resize = int(npz[7][0])
 
         self.img = cv2.resize(self.origin_image, (self.w // self.resize, self.h // self.resize))
         self.h = self.img.shape[0]
         self.w = self.img.shape[1]
 
-        if "hexahedron" in self.image_address:
+        if "download_img" in self.image_address: # 이게 사람이 지정해주는 폴더명으로 가야함
             self.object_type = "hexahedron"
         else:
             self.object_type = "Error"
@@ -141,7 +142,7 @@ class volumetric:
 
         # y_ucl = abs(point[0][1] - point[1][1])
 
-        w, h = (self.w, self.h * 2)
+        w, h = (self.w , self.h * 2) # 왜 얘는 2배 안함?
         self.outer_points2 = np.float32(
             [[w, h],
              [w, h + one_step * (self.checker_sizes[1] - 1)],
@@ -176,7 +177,7 @@ class volumetric:
         )
 
         # 픽셀당 실제 거리 - check_real_dist(cm) / 1칸당 떨어진 픽셀 거리
-        self.pix_per_real_dist = self.check_real_dist / one_checker_per_pix_dis
+        self.pix_per_real_dist = self.check_real_dist / one_checker_per_pix_dis # * 1.5
 
         if self.object_type == "hexahedron":
             # 두 점 사이의 픽셀거리 * 1픽셀당 실제 거리 = 두 점의 실제 거리
@@ -187,7 +188,7 @@ class volumetric:
                     utils.euclidean_distance(re_object_points[2], re_object_points[3]) * self.pix_per_real_dist
             )
 
-    # 높이 측정이 제대로 안돼...
+
     def measure_height(self, draw=True):
         """
         높이 측정 함수
@@ -200,6 +201,7 @@ class volumetric:
         ar_object_standard_z = utils.transform_coordinate(self.transform_matrix, vertexes_list)
 
         # 두 점을 1으로 나눈 거리를 1칸 기준 (ckecker 사이즈에서 1 빼면 칸수)
+        ### 이 부분을 자세하게 봐봅시다!! ###
         standard_ar_dist = abs(ar_start[0] - ar_second[0]) / (self.checker_sizes[0] - 1)
 
         # 실제 세계의 기준 좌표를 기준으로 물체의 z축을 구할 바닥 좌표의 실제 세계의 좌표를 구한다
@@ -230,6 +232,7 @@ class volumetric:
         # fontv = cv2.FONT_HERYSHEY_DUPLEX
         # 가로, 세로, 높이 출력
         if self.object_type == "hexahedron":
+            printer = True
             if printer:
                 print("육면체")
                 print("가로길이 :", self.width)
@@ -240,13 +243,16 @@ class volumetric:
                 # print("부피 :", self.width * self.vertical * self.height * self.check_real_dist)
 
             # 가로세로높이 그리기
+            # 가로
             cv2.putText(self.img, f"{self.width: .2f}cm", (
                 self.object_vertexes[1][0] - (self.object_vertexes[1][0] // 3),
                 self.object_vertexes[1][1] + ((self.h - self.object_vertexes[1][1]) // 3)), font, (3 / self.resize),
                         (0, 255, 0), (10 // self.resize))
+            # 세로
             cv2.putText(self.img, f"{self.vertical: .2f}cm", (
                 self.object_vertexes[3][0], self.object_vertexes[1][1] + ((self.h - self.object_vertexes[3][1]) // 3)),
                         font, (3 / self.resize), (255, 0, 0), (10 // self.resize))
+            #높이
             cv2.putText(self.img, f"{(self.height * self.check_real_dist): .2f}cm", (
                 self.object_vertexes[0][0] - (self.object_vertexes[0][0] // 2),
                 (self.object_vertexes[0][1] + self.object_vertexes[1][1]) // 2), font, (3 / self.resize), (0, 0, 255),
@@ -255,6 +261,8 @@ class volumetric:
                      cv2.LINE_AA)
             cv2.line(self.img, (self.object_vertexes[2]), (self.object_vertexes[3]), (255, 0, 0), (10 // self.resize),
                      cv2.LINE_AA)
+
+
             # 부피 나타내는 박스 그려봅시다
             # cv2.rectangle(img, pt1, pt2,(0,0,255),3)
             cv2.rectangle(self.img, (550, 10), (750, 80), (0, 255, 0), 3)
@@ -374,7 +382,7 @@ if __name__ == '__main__':
 
         # 이미지 업로드 예시
         local_image_path = "./upload_img/" + img_name  # 자기 컴퓨터 내 이미지 경로
-        destination_image_path = "result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
+        destination_image_path = "image_result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
         upload_image(local_image_path, destination_image_path)
         print("upload complete!!!")
 
@@ -411,7 +419,7 @@ if __name__ == '__main__':
     # 최신 이미지 URL 가져오기
     def get_latest_image_url():
         bucket = storage.bucket()
-        blobs = bucket.list_blobs(prefix="images/")  # 이미지가 저장된 디렉토리명 설정
+        blobs = bucket.list_blobs(prefix="stopbox/")  # 이미지가 저장된 디렉토리명 설정
         # print("1) blobs: ")
         # print(blobs) # blob 아님
         # 1) blobs:
@@ -440,11 +448,11 @@ if __name__ == '__main__':
         # <Blob: cj-2023-pororo.appspot.com, input/202307311606.jpg, 1690787255953491>
 
         # 이미지 다운로드
-        download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        # download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         time.sleep(3)
-        image_path = "./hexahedron/" + img_name
-        npz_name = "cs_(8, 5)_rd_3_te_0.06_rs_4.npz"
+        image_path = "./download_img/" + img_name
+        npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_4.npz"
         npz_path = "calibration/" + npz_name
         main(image_path, npz_path, img_name)
         # 이미지 업로드
