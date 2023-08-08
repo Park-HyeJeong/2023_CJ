@@ -7,13 +7,13 @@ def find_checker_outer_points(refined_corners: np.array, checker_sizes: tuple, p
     points: cv2.cornerSubPix()에 의해 생성된 점들
     size: 체스판의 크기
     """
-    points = refined_corners
-    size = checker_sizes
+    points = refined_corners # 아래에서 refined_corners
+    size = checker_sizes # (i,j)
 
     outer_points = np.float32(
         [
-            points[0][0],
-            points[size[0] * (size[1] - 1)][0],
+            points[0][0], # 체스판 좌상단
+            points[size[0] * (size[1] - 1)][0], # 체스판 우상단
             points[size[0] - 1][0],
             points[(size[0] * (size[1] - 1)) + (size[0] - 1)][0],
         ]
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     real_dist = 3
 
     # resize 별 npz 파일 만들기
-    for resize in range(7, 0, -1):
+    for resize in range(7, 1, -1):
         print("resize :", resize)
         i, j = (8, 5)
         imgpoints = []
@@ -55,7 +55,8 @@ if __name__ == "__main__":
             img = cv2.imread(fname).copy()
             h, w = img.shape[:2]
             image = cv2.resize(img, (w // resize, h // resize))
-
+            # print(img.shape[:2])
+            # print(image)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
             ret, corners = cv2.findChessboardCorners(gray, (i, j), None)
@@ -70,7 +71,21 @@ if __name__ == "__main__":
                     gray, corners, (11, 11), (-1, -1), criteria
                 )
                 imgpoints.append(refined_corners)
-                print("corner is  detected !!!")
+                # # 코너를 그리고 봐보자
+                # img = cv2.drawChessboardCorners(img, (8, 5), refined_corners, ret)
+                # cv2.namedWindow('img', cv2.WINDOW_NORMAL)
+                # cv2.resizeWindow('img', 800, 800)  # 예시 크기
+                # cv2.imshow('img', img)
+                # cv2.waitKey(2000)
+                # Test
+                # image = cv2.imread('./calibration/1 (1).jpg', cv2.IMREAD_GRAYSCALE)
+                # for corner in refined_corners:
+                #     x, y = corner.ravel()
+                #     cv2.line(image, (i, j), 3, 255, -1)
+                # cv2.namedWindow('Image Window', cv2.WINDOW_NORMAL)
+                # cv2.resizeWindow('Image Window', 600, 600)  # 예시 크기
+                # cv2.imshow('Image Window',image)
+                # print("corner is  detected !!!")
 
             else:
                 print("corner is not detected......")

@@ -52,7 +52,7 @@ class volumetric:
 
     def find_vertex(self, draw=False):
         '''
-        물체 꼭지점 6좌표 추출하는 함수
+        물체 꼭지점 6좌표 추출하는 함수0
         draw : 그리기
         '''
         gray_img = cv2.cvtColor(self.remove_bg_image, cv2.COLOR_BGR2GRAY)
@@ -176,8 +176,8 @@ class volumetric:
                 self.checker_sizes[0] - 1
         )
 
-        # 픽셀당 실제 거리 - check_real_dist(cm) / 1칸당 떨어진 픽셀 거리
-        self.pix_per_real_dist = self.check_real_dist / one_checker_per_pix_dis # * 1.5
+        # 픽셀당 실제 거리 - check_real_dist(cm) / 1칸당 떨어진 픽셀 거리 * (보정 값 대입) 123123
+        self.pix_per_real_dist = self.check_real_dist / one_checker_per_pix_dis * 3
 
         if self.object_type == "hexahedron":
             # 두 점 사이의 픽셀거리 * 1픽셀당 실제 거리 = 두 점의 실제 거리
@@ -201,7 +201,6 @@ class volumetric:
         ar_object_standard_z = utils.transform_coordinate(self.transform_matrix, vertexes_list)
 
         # 두 점을 1으로 나눈 거리를 1칸 기준 (ckecker 사이즈에서 1 빼면 칸수)
-        ### 이 부분을 자세하게 봐봅시다!! ###
         standard_ar_dist = abs(ar_start[0] - ar_second[0]) / (self.checker_sizes[0] - 1)
 
         # 실제 세계의 기준 좌표를 기준으로 물체의 z축을 구할 바닥 좌표의 실제 세계의 좌표를 구한다
@@ -237,7 +236,7 @@ class volumetric:
                 print("육면체")
                 print("가로길이 :", self.width)
                 print("세로길이 :", self.vertical)
-                print("높이길이 :", self.height * self.check_real_dist)
+                print("높이길이 :", self.height * self.check_real_dist * 3.7) # height 123123
                 # 부피를 이미지 상에 띄워주자
                 print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist): .2f}")
                 # print("부피 :", self.width * self.vertical * self.height * self.check_real_dist)
@@ -253,7 +252,7 @@ class volumetric:
                 self.object_vertexes[3][0], self.object_vertexes[1][1] + ((self.h - self.object_vertexes[3][1]) // 3)),
                         font, (3 / self.resize), (255, 0, 0), (10 // self.resize))
             #높이
-            cv2.putText(self.img, f"{(self.height * self.check_real_dist): .2f}cm", (
+            cv2.putText(self.img, f"{(self.height * self.check_real_dist * 2): .2f}cm", (
                 self.object_vertexes[0][0] - (self.object_vertexes[0][0] // 2),
                 (self.object_vertexes[0][1] + self.object_vertexes[1][1]) // 2), font, (3 / self.resize), (0, 0, 255),
                         (10 // self.resize))
@@ -265,9 +264,10 @@ class volumetric:
 
             # 부피 나타내는 박스 그려봅시다
             # cv2.rectangle(img, pt1, pt2,(0,0,255),3)
-            cv2.rectangle(self.img, (550, 10), (750, 80), (0, 255, 0), 3)
-            cv2.putText(self.img, "{:.2f}".format(self.width * self.vertical * self.height * self.check_real_dist),
-                        (560, 55),
+            cv2.rectangle(self.img, (350, 10), (600, 80), (0, 255, 0), 3)
+            volume_text = "V:"
+            cv2.putText(self.img, volume_text + f"{self.width * self.vertical * self.height * self.check_real_dist:.2f}",
+                        (360, 55),
                         font, 1.4, (0, 0, 255), 2)
 
     def show_image(self, image: np.array, image_name: str):
@@ -330,16 +330,16 @@ if __name__ == '__main__':
 
         # a.show_image(a.origin_image, "Origin Image")
         # cv2.waitKey()
-
+        #
         # a.show_image(a.remove_bg_image, "Remove Background")
         # cv2.waitKey(1500)
-
+        #
         # a.show_image(a.object_detection_image, "Object Detection Image")
         # cv2.waitKey(1500)
-
+        #
         # a.show_image(a.vertexes_image, "vertexes Image")
         # cv2.waitKey(1500)
-
+        #
         a.show_image(a.img, "Result Image")
         cv2.waitKey()
 
@@ -347,38 +347,6 @@ if __name__ == '__main__':
 
         a.save_image(image_address="./upload_img/" + img_name, image=a.img)
         # a.time_check()
-
-        # # 완성된 이미지 위에 부피를 띄울까?
-        # ###
-        # path = r'C:\Users\Rajnish\Desktop\geeksforgeeks\geeks.png'
-
-        # # Reading an image in default mode
-        # image = cv2.imread(path)
-
-        # # Window name in which image is displayed
-        # window_name = 'Image'
-
-        # # font
-        # font = cv2.FONT_HERSHEY_SIMPLEX
-
-        # # org
-        # org = (50, 50)
-
-        # # fontScale
-        # fontScale = 1
-
-        # # Blue color in BGR
-        # color = (255, 0, 0)
-
-        # # Line thickness of 2 px
-        # thickness = 2
-
-        # # Using cv2.putText() method
-        # image = cv2.putText(image, 'OpenCV', org, font,
-        #                 fontScale, color, thickness, cv2.LINE_AA)
-        # # Displaying the image
-        # cv2.imshow(window_name, image)
-        # ###
 
         # 이미지 업로드 예시
         local_image_path = "./upload_img/" + img_name  # 자기 컴퓨터 내 이미지 경로
@@ -448,11 +416,11 @@ if __name__ == '__main__':
         # <Blob: cj-2023-pororo.appspot.com, input/202307311606.jpg, 1690787255953491>
 
         # 이미지 다운로드
-        # download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
         time.sleep(3)
         image_path = "./download_img/" + img_name
-        npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_4.npz"
+        npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_5.npz"
         npz_path = "calibration/" + npz_name
         main(image_path, npz_path, img_name)
         # 이미지 업로드
