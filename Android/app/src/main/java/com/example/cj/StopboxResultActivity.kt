@@ -10,7 +10,7 @@ import com.google.firebase.storage.FirebaseStorage
 
 class StopboxResultActivity : AppCompatActivity() {
     private var mBinding: ActivityStopboxResultBinding? = null
-    //매번 null 체크하지 않도록 확인 후 재 선언
+    //매번 null 체크하지 않도록 확인 후 재선언
     private val binding get() = mBinding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
