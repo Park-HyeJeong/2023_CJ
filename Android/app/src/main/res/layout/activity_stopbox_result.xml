@@ -15,4 +15,21 @@
         android:layout_marginLeft="20dp"
         android:src="@drawable/home" />
 
+    <TextView
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:text="박스의 체적을 확인하세요."
+        android:textSize="20dp"
+        android:gravity="center"
+        android:layout_gravity="center"/>
+
+    <ImageView
+        android:id="@+id/resultimg"
+        android:layout_width="350dp"
+        android:layout_height="620dp"
+        android:layout_gravity="center"
+        android:adjustViewBounds="true"
+        android:layout_marginTop="10dp"
+        android:scaleType="fitCenter" />
+
 </LinearLayout>
