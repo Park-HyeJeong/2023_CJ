@@ -219,26 +219,26 @@ class volumetric:
             (ar_object_standard_z[1] - ar_start[1]) / standard_ar_dist,
             0
         ]
-        print("ar_object_real_coor: ", ar_object_real_coor)
-        # # ###
-        # ar_start_3d = cv2.triangulatePoints(self.camera_matrix, np.identity(3), x, np.identity(3),
-        #                                     np.array(ar_start))
-        # distance_start = np.linalg.norm(np.array(ar_object_real_coor) - ar_start_3d[:3] / ar_start_3d[3])
-        # print("Distance to start point:", distance_start)
-        print("self.tvecs: ",self.tvecs)
-        # 거리 구하기의 x y z
-        pre_x = np.round(abs(ar_object_real_coor[0] - self.tvecs[0]),2)
-        distance_x = pre_x[0]
-        print("distance_x: ", distance_x)
-        pre_y = np.round(abs(ar_object_real_coor[1] - self.tvecs[1]),2)
-        distance_y = pre_y[0]
-        print("distance_y: ", distance_y)
-        pre_z = np.round(abs(ar_object_real_coor[2] - self.tvecs[2]),2)
-        distance_z = pre_z[0]
-        print("distance_z: ",distance_z)
-        camera_to_box = round(math.sqrt(pow(distance_x,2)+ pow(distance_y,2)+ pow(distance_z,2)),2)
-        print("camera_to_box: ", camera_to_box)
-        # # ###
+        # print("ar_object_real_coor: ",ar_object_real_coor)
+        # # # ###
+        # # ar_start_3d = cv2.triangulatePoints(self.camera_matrix, np.identity(3), x, np.identity(3),
+        # #                                     np.array(ar_start))
+        # # distance_start = np.linalg.norm(np.array(ar_object_real_coor) - ar_start_3d[:3] / ar_start_3d[3])
+        # # print("Distance to start point:", distance_start)
+        # print("self.tvecs: ",self.tvecs)
+        # # 거리 구하기의 x y z
+        # pre_x = np.round(abs(ar_object_real_coor[0] - self.tvecs[0]),2)
+        # distance_x = pre_x[0]
+        # print("distance_x: ", distance_x)
+        # pre_y = np.round(abs(ar_object_real_coor[1] - self.tvecs[1]),2)
+        # distance_y = pre_y[0]
+        # print("distance_y: ", distance_y)
+        # pre_z = np.round(abs(ar_object_real_coor[2] - self.tvecs[2]),2)
+        # distance_z = pre_z[0]
+        # print("distance_z: ",distance_z)
+        # camera_to_box = math.sqrt(pow(distance_x,2)+ pow(distance_y,2)+ pow(distance_z,2))
+        # print("camera_to_box: ", camera_to_box)
+        # # # ###
 
         # self.objp = np.array(ar_object_real_coor)
         # print("실제좌표", self.objp)
@@ -270,7 +270,7 @@ class volumetric:
                 print("세로길이 :", self.vertical)
                 print("높이길이 :", self.height * self.check_real_dist * 3.7) # height 123123
                 # 부피를 이미지 상에 띄워주자
-                print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist): .2f}")
+                print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist*3.7): .2f}")
                 # print("부피 :", self.width * self.vertical * self.height * self.check_real_dist)
 
             # 가로세로 그리기
@@ -284,7 +284,7 @@ class volumetric:
                 self.object_vertexes[3][0], self.object_vertexes[1][1] + ((self.h - self.object_vertexes[3][1]) // 3)),
                         font, (3 / self.resize), (255, 0, 0), (10 // self.resize))
             #높이
-            cv2.putText(self.img, f"{(self.height * self.check_real_dist * 2): .2f}cm", (
+            cv2.putText(self.img, f"{(self.height * self.check_real_dist * 3.7): .2f}cm", (
                 self.object_vertexes[0][0] - (self.object_vertexes[0][0] // 2),
                 (self.object_vertexes[0][1] + self.object_vertexes[1][1]) // 2), font, (3 / self.resize), (0, 0, 255),
                         (10 // self.resize))
@@ -402,6 +402,7 @@ if __name__ == '__main__':
         # cv2.waitKey(1500)
 
 
+
         a.show_image(a.img, "Result Image")
         cv2.waitKey()
 
@@ -416,7 +417,6 @@ if __name__ == '__main__':
         upload_image(local_image_path, destination_image_path)
         print("upload complete!!!")
         return destination_image_path
-
 
     # 자동으로 받아올 수 있는 환경을 구성해보자!!!
     # Firebase Admin SDK 초기화 (한 번만 호출해야 합니다!)
@@ -457,6 +457,7 @@ if __name__ == '__main__':
         # <google.api_core.page_iterator.HTTPIterator object at 0x000002202F979C60>
         sorted_blobs = sorted(blobs, key=lambda blob: blob.time_created, reverse=True)
         latest_image_blob = sorted_blobs[0]
+        print("test: ")
         # print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
         # print(sorted_blobs[1]) # 얘도 아닌듯
         # test:
