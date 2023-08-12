@@ -21,6 +21,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CJ"
         tools:targetApi="31">
+        <meta-data
+            android:name="com.chaquo.python.PythonApplication"
+            android:value="true" />
         <activity
             android:name=".StopboxResultActivity"
             android:exported="false" />

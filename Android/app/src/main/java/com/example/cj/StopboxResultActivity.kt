@@ -3,6 +3,7 @@ package com.example.cj
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.example.cj.databinding.ActivityStopboxResultBinding
@@ -20,12 +21,25 @@ class StopboxResultActivity : AppCompatActivity() {
         mBinding = ActivityStopboxResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val intent = Intent(this, MainActivity::class.java)
+        //val intent2 = Intent(this,CheckActivity::class.java)
+        // 추가 데이터 수신
+        val text = intent.getStringExtra("key")
 
+        val intent = Intent(this, MainActivity::class.java)
         binding.homebtn.setOnClickListener { startActivity(intent) }
 
         // 이미지를 표시할 ImageView
         val imageView = binding.resultimg
+
+        // 수신한 데이터를 사용하기 전에 null이 아닌지 확인
+        if (text != null) {
+            Log.d("python", text)
+            val textView = binding.text
+            textView.text = text
+        } else {
+            Log.d("python", "받은 텍스트는 null입니다")
+        }
+
 
         // Firebase Storage 인스턴스 가져오기
         val storage = FirebaseStorage.getInstance()

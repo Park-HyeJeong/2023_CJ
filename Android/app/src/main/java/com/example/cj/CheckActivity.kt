@@ -7,11 +7,15 @@ import android.net.Uri
 import android.util.Log
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.chaquo.python.Python
 import com.example.cj.databinding.ActivityCheckBinding
 import com.example.cj.databinding.ActivityConveyorMainBinding
 import com.google.firebase.storage.FirebaseStorage
 import java.text.SimpleDateFormat
 import java.util.Date
+import com.chaquo.python.android.AndroidPlatform;
+import com.chaquo.python.PyObject;
+
 
 
 class CheckActivity : AppCompatActivity() {
@@ -23,6 +27,15 @@ class CheckActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mBinding = ActivityCheckBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Python 인터프리터 초기화
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
+
+        // Python 모듈 호출
+        val python = Python.getInstance()
+        val pyObject: PyObject = python.getModule("hello")
 
         val uploadUri = intent.getParcelableExtra<Uri>("img_Uri")
         Log.d("test-uri-log", uploadUri.toString())
@@ -52,6 +65,10 @@ class CheckActivity : AppCompatActivity() {
                 //Toast.makeText(activity, getString(R.string.upload_success), Toast.LENGTH_SHORT).show()
             }
         }
+            val result: PyObject = pyObject.callAttr("my_function","hi") // Python 함수 이름과 인자
+            val output: String = result.toString() // Python 함수 결과 가져오기
+            intent2.putExtra("key",output)
+            Log.d("python", output)
             startActivity(intent2)
         }
 

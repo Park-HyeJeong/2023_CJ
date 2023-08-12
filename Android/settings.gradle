@@ -18,3 +18,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "CJ"
 include ':app'
+include ':chaquopy'
+project(':chaquopy').projectDir = new File(settingsDir, 'chaquopy')

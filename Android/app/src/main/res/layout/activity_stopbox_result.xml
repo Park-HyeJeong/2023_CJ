@@ -24,10 +24,18 @@
         android:gravity="center"
         android:layout_gravity="center" />
 
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:gravity="center"
+        android:layout_gravity="center" />
+
     <ImageView
         android:id="@+id/resultimg"
         android:layout_width="350dp"
-        android:layout_height="620dp"
+        android:layout_height="600dp"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
         android:layout_marginTop="10dp"
