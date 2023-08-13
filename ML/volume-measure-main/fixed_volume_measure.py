@@ -219,26 +219,26 @@ class volumetric:
             (ar_object_standard_z[1] - ar_start[1]) / standard_ar_dist,
             0
         ]
-        print("ar_object_real_coor: ", ar_object_real_coor)
-        # # ###
-        # ar_start_3d = cv2.triangulatePoints(self.camera_matrix, np.identity(3), x, np.identity(3),
-        #                                     np.array(ar_start))
-        # distance_start = np.linalg.norm(np.array(ar_object_real_coor) - ar_start_3d[:3] / ar_start_3d[3])
-        # print("Distance to start point:", distance_start)
-        print("self.tvecs: ",self.tvecs)
-        # 거리 구하기의 x y z
-        pre_x = np.round(abs(ar_object_real_coor[0] - self.tvecs[0]),2)
-        distance_x = pre_x[0]
-        print("distance_x: ", distance_x)
-        pre_y = np.round(abs(ar_object_real_coor[1] - self.tvecs[1]),2)
-        distance_y = pre_y[0]
-        print("distance_y: ", distance_y)
-        pre_z = np.round(abs(ar_object_real_coor[2] - self.tvecs[2]),2)
-        distance_z = pre_z[0]
-        print("distance_z: ",distance_z)
-        camera_to_box = round(math.sqrt(pow(distance_x,2)+ pow(distance_y,2)+ pow(distance_z,2)),2)
-        print("camera_to_box: ", camera_to_box)
-        # # ###
+        # print("ar_object_real_coor: ",ar_object_real_coor)
+        # # # ###
+        # # ar_start_3d = cv2.triangulatePoints(self.camera_matrix, np.identity(3), x, np.identity(3),
+        # #                                     np.array(ar_start))
+        # # distance_start = np.linalg.norm(np.array(ar_object_real_coor) - ar_start_3d[:3] / ar_start_3d[3])
+        # # print("Distance to start point:", distance_start)
+        # print("self.tvecs: ",self.tvecs)
+        # # 거리 구하기의 x y z
+        # pre_x = np.round(abs(ar_object_real_coor[0] - self.tvecs[0]),2)
+        # distance_x = pre_x[0]
+        # print("distance_x: ", distance_x)
+        # pre_y = np.round(abs(ar_object_real_coor[1] - self.tvecs[1]),2)
+        # distance_y = pre_y[0]
+        # print("distance_y: ", distance_y)
+        # pre_z = np.round(abs(ar_object_real_coor[2] - self.tvecs[2]),2)
+        # distance_z = pre_z[0]
+        # print("distance_z: ",distance_z)
+        # camera_to_box = math.sqrt(pow(distance_x,2)+ pow(distance_y,2)+ pow(distance_z,2))
+        # print("camera_to_box: ", camera_to_box)
+        # # # ###
 
         # self.objp = np.array(ar_object_real_coor)
         # print("실제좌표", self.objp)
@@ -258,53 +258,6 @@ class volumetric:
                 self.img = cv2.circle(self.img, tuple(list(map(int, height_pixel[:2]))), 1, (0, 0, 255), -1,
                                       cv2.LINE_AA)
 
-    def distance_to_box(self):
-        """
-        높이 측정 함수
-        """
-        pts1 = self.outer_points1.tolist()
-        x = np.array(pts1[0])
-        # print(x)
-        # print(type(pts1))
-        ar_start = utils.transform_coordinate(self.transform_matrix, pts1[0])
-        # print("높이 측정: ",pts1)
-        # print("ar_start: ",ar_start)
-        ar_second = utils.transform_coordinate(self.transform_matrix, pts1[2])
-        vertexes_list = self.object_vertexes[1].tolist()
-        ar_object_standard_z = utils.transform_coordinate(self.transform_matrix, vertexes_list)
-        # print("transform_matrix: ", self.transform_matrix)
-        # 두 점을 1으로 나눈 거리를 1칸 기준 (ckecker 사이즈에서 1 빼면 칸수)
-        standard_ar_dist = abs(ar_start[0] - ar_second[0]) / (self.checker_sizes[0] - 1)
-
-        # 실제 세계의 기준 좌표를 기준으로 물체의 z축을 구할 바닥 좌표의 실제 세계의 좌표를 구한다
-        # x, y, z 값을 갖는다
-        ar_object_real_coor = [
-            (ar_object_standard_z[0] - ar_start[0]) / standard_ar_dist,
-            (ar_object_standard_z[1] - ar_start[1]) / standard_ar_dist,
-            0
-        ]
-        print("ar_object_real_coor: ", ar_object_real_coor)
-        # # ###
-        # ar_start_3d = cv2.triangulatePoints(self.camera_matrix, np.identity(3), x, np.identity(3),
-        #                                     np.array(ar_start))
-        # distance_start = np.linalg.norm(np.array(ar_object_real_coor) - ar_start_3d[:3] / ar_start_3d[3])
-        # print("Distance to start point:", distance_start)
-        print("self.tvecs: ",self.tvecs)
-        # 거리 구하기의 x y z
-        pre_x = np.round(abs(ar_object_real_coor[0] - self.tvecs[0]),2)
-        distance_x = pre_x[0]
-        print("distance_x: ", distance_x)
-        pre_y = np.round(abs(ar_object_real_coor[1] - self.tvecs[1]),2)
-        distance_y = pre_y[0]
-        print("distance_y: ", distance_y)
-        pre_z = np.round(abs(ar_object_real_coor[2] - self.tvecs[2]),2)
-        distance_z = pre_z[0]
-        print("distance_z: ",distance_z)
-        camera_to_box = round(math.sqrt(pow(distance_x,2)+ pow(distance_y,2)+ pow(distance_z,2)),2)
-        print("camera_to_box: ", camera_to_box)
-        return camera_to_box
-
-
     def draw_image(self, printer=False):
         font = cv2.FONT_HERSHEY_SIMPLEX
         # fontv = cv2.FONT_HERYSHEY_DUPLEX
@@ -317,7 +270,7 @@ class volumetric:
                 print("세로길이 :", self.vertical)
                 print("높이길이 :", self.height * self.check_real_dist * 3.7) # height 123123
                 # 부피를 이미지 상에 띄워주자
-                print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist * 3.7): .2f}")
+                print(f"{self.width: .2f} x {self.vertical: .2f} x {(self.height * self.check_real_dist*3.7): .2f}")
                 # print("부피 :", self.width * self.vertical * self.height * self.check_real_dist)
 
             # 가로세로 그리기
@@ -394,29 +347,9 @@ class volumetric:
     #     print(tVec[2][0])
 
 
+
+
 if __name__ == '__main__':
-    ###
-    def distance(fname, npz, img_name):
-        a = volumetric(fname, npz)
-        a.set_init()
-        a.set_npz_values()
-
-        # 1. 배경제거
-        a.remove_background()
-
-        # 2. 물체 꼭지점 찾기
-        a.find_vertex(draw=False)
-        a.fix_vertex()
-
-        a.trans_checker_stand_coor()
-        a.set_transform_matrix()
-
-        d = a.distance_to_box()
-
-        return d
-
-
-    ###
     # 7. 전체
     def main(fname, npz, img_name):
         a = volumetric(fname, npz)
@@ -469,6 +402,7 @@ if __name__ == '__main__':
         # cv2.waitKey(1500)
 
 
+
         a.show_image(a.img, "Result Image")
         cv2.waitKey()
 
@@ -479,11 +413,10 @@ if __name__ == '__main__':
 
         # 이미지 업로드 예시
         local_image_path = "./upload_img/" + img_name  # 자기 컴퓨터 내 이미지 경로
-        destination_image_path = "images_result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
+        destination_image_path = "image_result/" + img_name  # Firebase Storage에 저장될 경로, 폴더일 경우 /를 통해 구분
         upload_image(local_image_path, destination_image_path)
         print("upload complete!!!")
         return destination_image_path
-
 
     # 자동으로 받아올 수 있는 환경을 구성해보자!!!
     # Firebase Admin SDK 초기화 (한 번만 호출해야 합니다!)
@@ -517,69 +450,42 @@ if __name__ == '__main__':
     # 최신 이미지 URL 가져오기
     def get_latest_image_url():
         bucket = storage.bucket()
-        blobs = bucket.list_blobs(prefix="conveyor/")  # 이미지가 저장된 디렉토리명 설정
+        blobs = bucket.list_blobs(prefix="stopbox/")  # 이미지가 저장된 디렉토리명 설정
         # print("1) blobs: ")
         # print(blobs) # blob 아님
         # 1) blobs:
         # <google.api_core.page_iterator.HTTPIterator object at 0x000002202F979C60>
         sorted_blobs = sorted(blobs, key=lambda blob: blob.time_created, reverse=True)
-        ###
-        # jpg_blobs = [blob for blob in blobs if blob.name.endswith('.jpg')]
-        num_files_to_fetch = 5
-        latest_files = sorted_blobs[:num_files_to_fetch]
-        i=0
-        x=0
-        m = 1000
-        j=0
-        for jpg_blob in latest_files:
-            i +=1
-            print(i)
-            print("File Name:", jpg_blob.name)
-            blob_string = str(jpg_blob)
-            items = blob_string.strip("<>").split(", ")
-            # 2번째 항목 추출
-            second_item = items[1]
-            print(second_item)  # input/IMAGE_20230801_1335.jpg
-            # 파일 이름만 뽑아내자
-            tmp = second_item.split("/")
-            img_name = tmp[1]
-            print(img_name)  # IMAGE_20230801_1353.jpeg
-            download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
-            time.sleep(3)
-            image_path = "./download_img/" + img_name
-            npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_5.npz"
-            npz_path = "calibration/" + npz_name
-            x = distance(image_path,npz_path,img_name)
-            if(m >= x):
-                m = x
-                j = i
-        print(j)
-        # sorted_blobs = sorted(blobs, key=lambda blob: blob.time_created, reverse=True)
-        target_index = j  # 0부터 시작하는 인덱스
-        if target_index < len(sorted_blobs):
-            choosed_image = sorted_blobs[target_index]
-            print("File Name:", choosed_image.name)
-            # tmp = choosed_image.name.split("/")
-            # img_name = tmp[1]
-            # image_path = "./conveyor/" + img_name
-            # print(image_path)
-            blob_string = str(choosed_image)
-            items = blob_string.strip("<>").split(", ")
-            # 2번째 항목 추출
-            second_item = items[1]
-            print(second_item)  # input/202308011335.jpg
-            # 파일 이름만 뽑아내자
-            tmp = second_item.split("/")
-            img_name = tmp[1]
-            print(img_name)  # 202308011353.jpeg
-            download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
-            npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_5.npz"
-            npz_path = "calibration/" + npz_name
-            main(image_path, npz_path, img_name)
-        else:
-            print("해당 인덱스에 이미지가 없습니다.")
-        # 이미지 다운로드
+        latest_image_blob = sorted_blobs[0]
+        print("test: ")
+        # print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
+        # print(sorted_blobs[1]) # 얘도 아닌듯
+        # test:
+        # <Blob: cj-2023-pororo.appspot.com, input/, 1690706608571788>
+        # print("2) latest_image_blob: ") # 여기서 파일명도 가져오거든
+        # print(latest_image_blob)  # 여기서 2번째 애를 가져와야 하는데
+        blob_string = str(latest_image_blob)
+        items = blob_string.strip("<>").split(", ")
+        # 2번째 항목 추출
+        second_item = items[1]
+        print(second_item)  # input/202308011335.jpg
+        # 파일 이름만 뽑아내자
+        tmp = second_item.split("/")
+        img_name = tmp[1]
+        print(img_name)  # 202308011353.jpeg
+        # destination_file_path =
+        # print(type(latest_image_blob))
+        # 2) latest_image_blob:
+        # <Blob: cj-2023-pororo.appspot.com, input/202307311606.jpg, 1690787255953491>
 
+        # 이미지 다운로드
+        download_image(second_item, "./hexahedron/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        download_image(second_item, "./download_img/" + img_name)  # 이미지를 다운로드하고 싶은 경로로 수정, 앞이 받는 이미지, 뒤가 파일 받는 경로
+        time.sleep(3)
+        image_path = "./download_img/" + img_name
+        npz_name = "cs_(8, 5)_rd_3_te_0.04_rs_5.npz"
+        npz_path = "calibration/" + npz_name
+        main(image_path, npz_path, img_name)
         # 이미지 업로드
 
 
