@@ -7,7 +7,7 @@ def draw_outer_pts(
     image: np.ndarray,
     points: np.ndarray,
     points_size=7,
-    win_size=(800, 800),
+    win_size=(600, 800),
     win_name="CV Window",
 ):
     """
@@ -50,33 +50,6 @@ def transform_coordinate(trans_coor: np.array, point: list) -> list:
     after = after.reshape(-1)  # wx`, wy`, w
     # w로 나눠준다 -> x`, y`
     result = [(after[0] / after[2]), (after[1] / after[2])]
-
-    return result
-
-
-def trans_checker_stand_coor(point: list, stand_corr: tuple, checker_size: tuple) -> list:
-    """
-    ** 수정 필요 **
-    이미지상의 4개의 좌표를 일정한 간격으로 펴서 4개의 좌표로 만들어주는 함수
-    point : ex) np.float32([[931, 1411], [1101, 2033], [1667, 1189], [2045, 1706]])
-    stand_coor : 새로 만드는 좌표의 좌측 상단의 기준 좌표
-    result : point와 같은 형식 
-    """
-
-    # x, y 비율과 똑같이 ar 이미지에 투시한다.
-    # 첫번째 좌표를 기준으로 오른쪽에서 x, 아래쪽 좌표에서 y 간격(비율)을 구해준다.
-    # 1칸당 거리 구하기
-    one_step = abs(point[0][0] - point[2][0]) / (checker_size[0] - 1)
-
-    # y_ucl = abs(point[0][1] - point[1][1])
-
-    w, h = stand_corr
-    result = np.float32(
-        [[w, h], 
-        [w, h + one_step * (checker_size[1] - 1)], 
-        [w + one_step * ((checker_size[0] - 1)), h], 
-        [w + one_step * ((checker_size[0] - 1)), h + one_step * (checker_size[1] - 1)],]
-    )
 
     return result
 
